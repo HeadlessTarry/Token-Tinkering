@@ -1,0 +1,83 @@
+---
+default_install_hook_types: [pre-commit, commit-msg]
+default_stages: [pre-commit]
+
+repos:
+  # Git and file hygiene
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: no-commit-to-branch
+        args: [--branch, main]
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+        args: [--markdown-linebreak-ext=md]
+      - id: mixed-line-ending
+        args: [--fix=lf]
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-json
+
+  # Shell
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+        args: [--enable=require-double-brackets, --enable=add-default-case]
+
+  # GitHub workflows
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.32.0
+    hooks:
+      - id: zizmor
+        args: [--offline]
+  - repo: https://github.com/Mateusz-Grzelinski/actionlint-py
+    rev: v1.7.12.25
+    hooks:
+      - id: actionlint
+
+  # Local hooks
+  - repo: local
+    hooks:
+      - id: biome
+        name: Lint and format JavaScript, TypeScript and JSON (Biome)
+        entry: node node_modules/@biomejs/biome/bin/biome check --write --no-errors-on-unmatched --files-ignore-unknown=true
+        language: system
+        types_or: [javascript, ts, tsx, json]
+      - id: marketplace-rule
+        name: Check every marketplace entry is an overhaul mod
+        entry: node scripts/check_marketplace.mjs
+        language: system
+        files: ^(\.claude-plugin/marketplace\.json|scripts/check_marketplace\.mjs)$
+        pass_filenames: false
+      - id: marketplace-validate
+        name: Validate the marketplace (claude plugin validate)
+        entry: node scripts/claude_plugin.mjs validate
+        language: system
+        files: ^\.claude-plugin/marketplace\.json$
+      - id: mod-validate
+        name: Validate the staged overhaul mods (claude plugin validate)
+        entry: node scripts/claude_plugin.mjs validate
+        language: system
+        files: ^overhaul-mods/[^/]+/(\.claude-plugin/|hooks/hooks\.json$|output-styles/|README\.md$)
+      - id: mod-test
+        name: Test the staged overhaul mods (claude plugin test)
+        entry: node scripts/claude_plugin.mjs test
+        language: system
+        files: ^overhaul-mods/[^/]+/.*\.tsx?$
+      - id: script-test
+        name: Test the check scripts
+        entry: >-
+          node --test --experimental-test-coverage --test-coverage-include=scripts/*.mjs --test-coverage-lines=90
+          --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info
+          scripts/tests/*.test.mjs
+        language: system
+        files: ^scripts/.*\.mjs$
+        pass_filenames: false
+      - id: commit-msg-format
+        name: Check commit message format
+        entry: '\A(feat|fix|docs|chore): \S'
+        language: pygrep
+        args: [--multiline, --negate]
+        stages: [commit-msg]

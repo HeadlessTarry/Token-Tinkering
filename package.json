@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@anthropic-ai/claude-code": "2.1.322",
+    "@biomejs/biome": "2.6.4",
+    "@j178/prek": "0.5.9"
+  }
+}

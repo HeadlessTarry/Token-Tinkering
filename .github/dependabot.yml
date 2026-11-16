@@ -1,0 +1,30 @@
+---
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - "dependabot:dependencies"
+      - "dependabot:github-actions"
+    cooldown:
+      default-days: 7
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - "dependabot:dependencies"
+      - "dependabot:npm"
+    cooldown:
+      default-days: 7
+  - package-ecosystem: pre-commit
+    directory: /
+    schedule:
+      interval: weekly
+    labels:
+      - "dependabot:dependencies"
+      - "dependabot:pre-commit"
+    cooldown:
+      default-days: 7
