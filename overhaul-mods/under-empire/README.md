@@ -11,12 +11,39 @@ claude plugin install under-empire@token-tinkering
 |---------|------------|
 | `Warlock Engineer` output style | A scheming Skaven voice for prose; code, commands and artefacts stay plain ([output-styles/warlock-engineer.md](output-styles/warlock-engineer.md)) |
 | Reminder hook | A `UserPromptSubmit` command hook that adds [hooks/reminder.txt](hooks/reminder.txt) to every prompt, so the voice holds in long sessions |
+| Warren | A permanent, animated desktop backdrop: a dim Skaven warren behind the transcript (below) |
 | Underlings | A side pane listing running subagents and background tasks as animated Skaven rats (below) |
 | Doomwheel | A side pane showing each PR's review process, read from the session and GitHub, as a Skaven Doomwheel (below) |
 
 Claude Code loads one hooks module per plugin, so [hooks/register.ts](hooks/register.ts) registers every mod in `mods/`. Each mod keeps its own source and tests in `mods/<mod>/`, and its `$.state` keys, prefixed `<mod>.`, in the plugin's one contract, [types/index.d.ts](types/index.d.ts).
 
 The engine takes one hook without a matcher per event from a plugin. Underlings holds those on `session.start`, `tool.call`, `session.append` and `turn.complete`. A later mod hooks those events with a matcher naming what it watches, as Doomwheel does.
+
+## 🏚️ Warren
+
+A permanent, animated desktop backdrop: a dim Skaven warren drawn behind the transcript. Tunnel mouths, rickety wooden scaffolding and Clan Skryre machinery sit on two cavern walls, which fade toward an empty dark centre so the transcript stays legible. It is on whenever the plugin is installed, with no command or setting.
+
+- **Light:** warp machinery is each wall's main light; braziers and torches add a much dimmer orange light, and warp-lightning flashes (from the machinery only) add brief extra light. Only fire-lit tunnels glow, in orange.
+- **Motion:** sparse and at real speed: flames, gears, pistons, bellows, a gauge, vapour, a hoist, rats scurrying along walkways, pairs of red eyes blinking in tunnel mouths every one to three minutes, and the occasional bolt of warp-lightning. With `prefers-reduced-motion: reduce`, the animation stops and the moving actors are hidden.
+- **Drawing:** one hand-authored SVG with no script or external loads, drawn at about 38% opacity under frosted glass. The shapes are seeded, so the warren looks the same on every render.
+- **Desktop only:** the terminal and mobile surfaces draw no warren.
+
+### Needs dark mode
+
+The warren is designed for dark mode only. A mod cannot detect the person's light or dark mode, and the desktop app ignores `overrideColorScheme`, so the warren draws in both.
+
+### Known limits
+
+- **Panes and the sidebar cover the backdrop.** The Backdrop always fills the whole window and is not told where the chat area sits, so an open pane covers the right wall and the sidebar covers the left.
+- **No pause on blur.** The API has no window-focus signal, so the animation keeps running while the window is unfocused.
+
+### Files
+
+| File | Role |
+|---|---|
+| `mods/warren/register.tsx` | The `session.start` hook that sets the backdrop and glass, and the `Backdrop` render hook |
+| `mods/warren/scene.ts` | `buildScene()`: the whole warren as one SVG string, built from named layers |
+| `mods/warren/tests/` | Tests of the scene's size, safety and references, and of the hooks |
 
 ## 🐀 Underlings
 
