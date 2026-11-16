@@ -56,7 +56,7 @@ const HEAD = [
 type Grid = (string | null)[][]
 
 function grid(): Grid {
-  return Array.from({ length: N }, () => Array<string | null>(N).fill(null))
+  return Array.from({ length: N }, () => new Array<string | null>(N).fill(null))
 }
 function put(g: Grid, x: number, y: number, c: string) {
   const row = g[y]
@@ -452,7 +452,7 @@ const STOPPED = '#d9a441'
 
 /** Blends two `#rrggbb` colours: `amount` of `a` over `b`. */
 export function mix(a: string, b: string, amount: number): string {
-  const channel = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16)
+  const channel = (hex: string, i: number) => Number.parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16)
   return `#${[0, 1, 2]
     .map((i) =>
       Math.round(channel(a, i) * amount + channel(b, i) * (1 - amount))

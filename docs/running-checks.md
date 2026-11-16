@@ -29,7 +29,7 @@ Each hook's arguments, file filters and versions live in [.pre-commit-config.yam
 | `marketplace-validate` | `claude plugin validate .` when the marketplace changes |
 | `mod-validate` | `claude plugin validate <mod>` for each mod whose `.claude-plugin/`, `hooks/hooks.json`, `output-styles/` or `README.md` is staged |
 | `mod-test` | `claude plugin test <mod>` for each mod with a staged `.ts`/`.tsx` file, when its `hooks/hooks.json` names a hooks module |
-| `script-test` | The check scripts' tests (`node --test`) |
+| `script-test` | The check scripts' tests (`node --test`), with at least 90% line coverage; writes `lcov.info` for SonarQube |
 
 The three `claude plugin` hooks run [scripts/claude_plugin.mjs](../scripts/claude_plugin.mjs) with the `claude` CLI pinned in [package.json](../package.json). Validation errors and warnings fail, except the missing-`version` warning, since plugins track commits.
 

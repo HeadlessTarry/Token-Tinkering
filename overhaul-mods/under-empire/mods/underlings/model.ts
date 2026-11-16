@@ -82,7 +82,7 @@ export function isKilled(text: string): boolean {
  */
 export function tailCommands(path: string, lines: number): string[][] {
   const tail = ['tail', '-n', String(lines), path]
-  const quoted = path.replace(/'/g, "''")
+  const quoted = path.replaceAll("'", "''")
   const powershell = ['powershell', '-NoProfile', '-Command', `Get-Content -LiteralPath '${quoted}' -Tail ${lines}`]
   return WINDOWS_PATH.test(path) ? [powershell, tail] : [tail, powershell]
 }
@@ -108,12 +108,12 @@ const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/g
  * tabs become spaces, and any other control character is dropped. Line breaks are kept.
  */
 export function sanitize(text: string): string {
-  return text.replace(ANSI_OSC, '').replace(ANSI_CSI, '').replace(OTHER_ESCAPE, '').replace(/\r\n?/g, '\n').replace(/\t/g, '    ').replace(CONTROL, '')
+  return text.replace(ANSI_OSC, '').replace(ANSI_CSI, '').replace(OTHER_ESCAPE, '').replace(/\r\n?/g, '\n').replaceAll('\t', '    ').replace(CONTROL, '')
 }
 
 export function tailLines(text: string, count: number): string {
   if (count <= 0) return ''
-  const lines = text.replace(/\r\n/g, '\n').replace(/\n$/, '').split('\n')
+  const lines = text.replaceAll('\r\n', '\n').replace(/\n$/, '').split('\n')
   return lines.slice(-count).join('\n')
 }
 

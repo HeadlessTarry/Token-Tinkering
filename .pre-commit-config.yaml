@@ -68,7 +68,10 @@ repos:
         files: ^overhaul-mods/[^/]+/.*\.tsx?$
       - id: script-test
         name: Test the check scripts
-        entry: node --test scripts/tests/*.test.mjs
+        entry: >-
+          node --test --experimental-test-coverage --test-coverage-include=scripts/*.mjs --test-coverage-lines=90
+          --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=lcov.info
+          scripts/tests/*.test.mjs
         language: system
         files: ^scripts/.*\.mjs$
         pass_filenames: false

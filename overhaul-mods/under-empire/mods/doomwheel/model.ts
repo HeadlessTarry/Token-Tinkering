@@ -18,8 +18,8 @@ const GH_RE = /(^|[\s;&|(])gh(\.exe)?\s/
 const GH_PR_CREATE_RE = /\bgh\s+pr\s+create\b/
 const CI_EVENT_RE = /<ci-monitor-event>/
 const CI_WATCHING_RE = /watching ([\w.-]+\/[\w.-]+) PR #(\d+)/
-const CI_FAILED_RE = /(\d+) CI checks? failed/
-const CI_COMMENTS_RE = /(\d+) new review comments?/
+const CI_FAILED_RE = /(?<!\d)(\d+) CI checks? failed/
+const CI_COMMENTS_RE = /(?<!\d)(\d+) new review comments?/
 const CI_CONFLICT_RE = /merge conflict/i
 /** What `gh` prints when it has no usable login. */
 const GH_AUTH_RE = /gh auth login|not logged in|authentication|GH_TOKEN/i

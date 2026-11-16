@@ -181,7 +181,7 @@ async function flush($: Engine) {
 }
 
 /** Starts the flush timer once per module load; /reload-plugins may not raise session.start again. */
-async function ensureTicker($: Engine) {
+function ensureTicker($: Engine) {
   if (tickers.length > 0) return
   tickers.push($.clock.every(FLUSH_MS, () => tick($)))
 }
@@ -425,19 +425,19 @@ export const register: Register = (on) => {
   on('session.start', async ($, e, next) => {
     const started = await next(e)
     await $.command.register({ name: 'underlings', description: 'Show the Underlings pane: running subagents and background tasks' })
-    await ensureTicker($)
+    ensureTicker($)
     return started
   })
 
   on('command.run', { command: 'underlings' }, async ($) => {
-    await ensureTicker($)
+    ensureTicker($)
     await tick($)
     await $.ui.open({ id: PANE, title: PANE_TITLE })
     return { text: 'Underlings pane opened.' }
   })
 
   on('agent.spawn', async ($, e, next) => {
-    await ensureTicker($)
+    ensureTicker($)
     const spawned = await next(e)
     if (spawned.deny === undefined && spawned.agentId) {
       await addUnderling($, {
@@ -472,7 +472,11 @@ export const register: Register = (on) => {
   })
 
   on('tool.call', async ($, e, next) => {
-    await ensureTicker($).catch(() => undefined)
+    try {
+      ensureTicker($)
+    } catch {
+      // The pane is a sideshow: a tool call never fails on it.
+    }
     const ran = await next(e)
     await afterToolCall($, e as never, ran).catch(() => undefined)
     return ran

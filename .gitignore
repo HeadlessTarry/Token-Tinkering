@@ -8,5 +8,8 @@
 # npm
 node_modules/
 
+# Coverage report from the script tests, read by SonarQube
+lcov.info
+
 # Engine-written declarations, regenerated whenever a session loads a mod from a folder you own
 overhaul-mods/*/.claude-plugin/types/
