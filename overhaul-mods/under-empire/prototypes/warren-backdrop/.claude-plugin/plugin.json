@@ -1,0 +1,6 @@
+{
+  "name": "warren-prototype",
+  "version": "0.1.0",
+  "description": "PROTOTYPE, throwaway: an animated Skaven warren drawn as the desktop backdrop, with /warren to switch variants.",
+  "types": "./types/index.d.ts"
+}
