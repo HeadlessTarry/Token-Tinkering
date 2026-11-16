@@ -15,4 +15,4 @@ Token-Tinkering holds the maintainer's overhaul mods for Claude Code and the `to
 
 **Before committing:** run `./run_checks.sh` and fix all failures. See [docs/running-checks.md](docs/running-checks.md).
 
-**Adding an overhaul mod:** create `overhaul-mods/<id>/` with a `.claude-plugin/plugin.json`, and add an entry to `.claude-plugin/marketplace.json` whose `source` is `./overhaul-mods/<id>`. Plugins set no `version`, so each commit is a new version.
+**Adding an overhaul mod:** create `overhaul-mods/<id>/` with a `.claude-plugin/plugin.json`, and add an entry to `.claude-plugin/marketplace.json` whose `source` is `./overhaul-mods/<id>`. Leave `version` out of `plugin.json` (see [README.md](README.md)).

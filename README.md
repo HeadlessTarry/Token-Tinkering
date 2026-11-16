@@ -35,4 +35,4 @@ docs/                → developer docs
 
 ## 🤝 Contributing
 
-Run `./setup_dev_env.sh` once per worktree, and `./run_checks.sh` before pushing. See [Development Environment](docs/development_environment.md) and [Running Checks](docs/running-checks.md).
+See [Development Environment](docs/development_environment.md) and [Running Checks](docs/running-checks.md).

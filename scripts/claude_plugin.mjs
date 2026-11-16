@@ -24,7 +24,7 @@ function modOf(file) {
 function hasHooksModule(mod) {
   try {
     const config = JSON.parse(readFileSync(join(mod, 'hooks', 'hooks.json'), 'utf-8'))
-    return typeof config === 'object' && !Array.isArray(config) && Array.isArray(config?.modules) && config.modules.length > 0
+    return Array.isArray(config?.modules) && config.modules.length > 0
   } catch {
     return false
   }
@@ -66,8 +66,15 @@ function test(mod) {
   return false
 }
 
+// Per command: which target each file's mod (or null, outside every mod) maps to, and the check run on each target.
+const COMMANDS = {
+  validate: { targetOf: (mod) => mod ?? '.', check: validate },
+  test: { targetOf: (mod) => (mod && hasHooksModule(mod) ? mod : null), check: test },
+}
+
 function main([command, ...files]) {
-  if (command !== 'validate' && command !== 'test') {
+  const chosen = Object.hasOwn(COMMANDS, command) ? COMMANDS[command] : null
+  if (!chosen) {
     console.log('usage: node scripts/claude_plugin.mjs <validate|test> <file>...')
     return 2
   }
@@ -75,11 +82,9 @@ function main([command, ...files]) {
     console.log(`${PINNED_CLI} not found; run ./setup_dev_env.sh to install it`)
     return 1
   }
-  const mods = files.map(modOf)
-  const targets = command === 'validate' ? new Set(mods.map((mod) => mod ?? '.')) : new Set(mods.filter((mod) => mod && hasHooksModule(mod)))
-  const check = command === 'validate' ? validate : test
+  const targets = new Set(files.map((file) => chosen.targetOf(modOf(file))).filter(Boolean))
   let failed = false
-  for (const target of targets) if (!check(target)) failed = true
+  for (const target of targets) if (!chosen.check(target)) failed = true
   return failed ? 1 : 0
 }
 

@@ -135,4 +135,4 @@ Each live PR is polled every 60 seconds, and at once on a wake, on a `gh` call t
 
 ## 🧪 Develop
 
-[run_checks.sh](../../run_checks.sh) validates the plugin and runs its tests (see [docs/running-checks.md](../../docs/running-checks.md)). After editing, run `/reload-plugins` in a session. The plugin sets no `version`, so each commit is a new version (see the [README](../../README.md)).
+[run_checks.sh](../../run_checks.sh) validates the plugin and runs its tests (see [docs/running-checks.md](../../docs/running-checks.md)). After editing, run `/reload-plugins` in a session. Each commit is a new version (see the [README](../../README.md)).
