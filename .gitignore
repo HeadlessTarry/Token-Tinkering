@@ -1,0 +1,12 @@
+# Worktrees
+.worktrees/
+.claude/worktrees/
+
+# Claude Code per-machine settings
+.claude/settings.local.json
+
+# npm
+node_modules/
+
+# Engine-written declarations, regenerated whenever a session loads a mod from a folder you own
+overhaul-mods/*/.claude-plugin/types/

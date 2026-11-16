@@ -1,0 +1,14 @@
+---
+name: Auto-Merge
+
+on:  # yamllint disable-line rule:truthy
+  # zizmor: ignore[dangerous-triggers] the called workflow in HeadlessTarry/.github never checks out or runs pull request code; it only reads the PR number to approve and enable auto-merge for Dependabot PRs
+  pull_request_target:
+    types: [opened, synchronize]
+
+jobs:
+  auto-merge:
+    uses: HeadlessTarry/.github/.github/workflows/auto-merge.yml@8b85aabd86bb0b8e85f8f9d8fb682e9cdabf8beb
+    permissions: {}
+    secrets:
+      AUTO_PRS_PRIVATE_KEY: ${{ secrets.AUTO_PRS_PRIVATE_KEY }}

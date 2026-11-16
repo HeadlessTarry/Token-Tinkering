@@ -1,0 +1,16 @@
+{
+  "name": "token-tinkering",
+  "owner": {
+    "name": "HeadlessTarry"
+  },
+  "metadata": {
+    "description": "Token-Tinkering overhaul mods for Claude Code"
+  },
+  "plugins": [
+    {
+      "name": "under-empire",
+      "source": "./overhaul-mods/under-empire",
+      "description": "Under-Empire overhaul mod: a scheming Skaven Warlock Engineer voice for prose, with plain professional artefacts, an Underlings pane of running subagents and background tasks, and a Doomwheel pane of each PR's review process"
+    }
+  ]
+}
