@@ -17,7 +17,7 @@ claude plugin install <id>@token-tinkering
 
 | Overhaul mod | What you get |
 |--------------|--------------|
-| [`under-empire`](overhaul-mods/under-empire/README.md) | The `Warlock Engineer` output style (a scheming Skaven voice for prose, plain professional artefacts), a reminder hook that keeps the voice on, the Underlings pane of running subagents and background tasks, and the Doomwheel pane of each PR's review process |
+| [`under-empire`](overhaul-mods/under-empire/README.md) | The `Warlock Engineer` output style (a scheming Skaven voice for prose, plain professional artefacts), a reminder hook that keeps the voice on, the warren backdrop that shows running subagents and background tasks as watching eyes, and the Doomwheel pane of each PR's review process |
 
 Plugins here set no `version`, so each commit is a new version and `claude plugin update` picks it up.
 

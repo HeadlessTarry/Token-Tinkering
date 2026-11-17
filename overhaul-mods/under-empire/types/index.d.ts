@@ -1,32 +1,13 @@
 // The under-empire $.state contract, one self-contained file as the engine requires. Each mod
 // declares its own values under the plugin's name, every key prefixed with the mod's name.
 
-// ---------------------------------------------------------------- underlings
+// ---------------------------------------------------------------- warren
 
-export type Kind = 'research' | 'experiment' | 'build' | 'test' | 'other'
+/** One pair of eyes in a warren tunnel. `spot` indexes the warren's 13 spots; `phase` says which one-shot fade its next render plays. */
+export type WarrenEye = { id: string; spot: number; phase: 'opening' | 'open' | 'closing' }
 
-export type Status = 'running' | 'done' | 'failed' | 'stopped'
-
-export type Underling = {
-  /** The subagent's agentId, or the background task id. */
-  id: string
-  type: 'subagent' | 'bash'
-  title: string
-  kind: Kind
-  status: Status
-  startedAt: number
-  endedAt?: number
-  /** The tool call that started it (Agent or Bash). */
-  toolUseId?: string
-  agentType?: string
-  model?: string
-  tokens?: number
-  command?: string
-  outputPath?: string
-  exitCode?: number
-}
-
-export type TxEntry = { kind: 'text' | 'thinking'; text: string } | { kind: 'tool'; id: string; name: string; arg: string; result?: string; isError?: boolean }
+/** Whether the agent is running a turn (the machinery moves), and the eyes open for active subagents and background tasks. */
+export type WarrenState = { running: boolean; eyes: WarrenEye[] }
 
 // ---------------------------------------------------------------- doomwheel
 
@@ -65,15 +46,9 @@ export type LogEntry = { at: number; key: string; kind: LogKind; text: string }
 declare module 'claude-code' {
   interface PluginState {
     'under-empire': {
+      'warren.state': WarrenState
       'doomwheel.offerings': Offering[]
       'doomwheel.log': LogEntry[]
-      'underlings.list': Underling[]
-      'underlings.selected': string | null
-      'underlings.now': number
-      /** Roster groups, by label, showing every row rather than the first few. */
-      'underlings.expanded': string[]
-      'underlings.transcript': StateFamily<TxEntry[]>
-      'underlings.output': StateFamily<string>
     }
   }
 }

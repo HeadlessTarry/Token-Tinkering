@@ -1,6 +1,17 @@
 // The under-empire warren Backdrop scene: one hand-authored SVG string, no script, no external
 // loads, drawn dim behind the transcript. Painted green-greys ("blight") at whisper level.
 
+import type { WarrenEye, WarrenState } from '../../types'
+import { eyesAt } from './eyes'
+import { type Level, levelFor, REST } from './level'
+
+// ---------- activity level ----------
+
+// The level and the eyes of the render in progress, set by buildScene. Like the jitter seed, they make
+// each render a pure function of its input while letting the layer functions below stay small.
+let L: Level = REST
+let EYES: WarrenEye[] = []
+
 // ---------- timing ----------
 
 // A loop of `cycle` seconds in which something happens for `len` seconds starting at `start`.
@@ -153,29 +164,19 @@ function walker(sym: string, w: number, h: number, path: string, t: Win, flip: b
 
 const rat = (path: string, t: Win, flip: boolean, trip?: Trip) => walker('rat', 30, 13, path, t, flip, 1.5, trip)
 
-// Something watches from the dark: a pair of red eyes that opens in a tunnel, blinks,
-// glances aside, and sinks back. The Skaven themselves are never seen.
-function eyes(x: number, y: number, t: Win): string {
-  const blink = `<animate attributeName="ry" values="1.4;1.4;.1;1.4;1.4;.1;1.4;1.4" keyTimes="0;.4;.43;.46;.8;.83;.86;1" dur="4.3s" repeatCount="indefinite"/>`
-  const glance = `<animateTransform attributeName="transform" type="translate" values="0 0;3 0;3 0;-2 0;0 0" dur="9.7s" repeatCount="indefinite"/>`
-  return (
-    `<g class="mv" opacity="0">${show(t, 1, 1.5)}<g transform="translate(${x} ${y})"><g>${glance}` +
-    `<circle class="halo" cx="-4" r="4"/><circle class="halo" cx="4" r="4"/>` +
-    `<ellipse class="eye" cx="-4" rx="1.4" ry="1.4">${blink}</ellipse><ellipse class="eye" cx="4" rx="1.4" ry="1.4">${blink}</ellipse>` +
-    `</g></g></g>`
-  )
-}
-
 // The shadowed throat of a tunnel, drawn over the rats so they sink into the dark rather than
 // vanish; then any watching eyes, then the tunnel's inner glow. All clipped to the hole.
-function mouth(cx: number, by: number, w: number, h: number, glow?: 'fire', watch?: Win): string {
+function mouth(cx: number, by: number, w: number, h: number, glow?: 'fire'): string {
   const g = glow ? `<ellipse class="gl gf" cx="${cx}" cy="${by - h * 0.35}" rx="${w * 0.42}" ry="${h * 0.4}" fill="url(#fireIn)"/>` : ''
-  const e = watch ? eyes(cx + j(w * 0.12), by - h * 0.42, watch) : ''
+  const e = eyesAt(`${cx},${by}`, EYES, cx, by)
   return `<g clip-path="url(#${holes.get(`${cx},${by}`)})"><ellipse cx="${cx}" cy="${by - h * 0.42}" rx="${w * 0.52}" ry="${h * 0.56}" fill="url(#throat)"/>${e}${g}</g>`
 }
 
 // A burst of warp-lightning: invisible for the cycle, three flickers at its window.
 function lightning(t: Win, d: string, gx: number, gy: number, reach = 460): string {
+  // At rest there is none. When busy, strikes come more often but each lasts as long as ever, so the
+  // markers keep it out of the machinery's speed-up and the stillness pass.
+  if (L.inert) return ''
   const len = t.b - t.a
   const k = (f: number) => r3(t.a + len * f)
   const vals = '0;0;1;0.1;0.9;0;1;0;0'
@@ -186,8 +187,8 @@ function lightning(t: Win, d: string, gx: number, gy: number, reach = 460): stri
   const glow = `<animate attributeName="opacity" begin="${t.begin}" dur="${t.dur}" repeatCount="indefinite" values="0;0;0.35;1;0.6;0;0" keyTimes="0;${pre};${t.a};${k(0.4)};${t.b};${r3(Math.min(0.999, t.b + len))};1"/>`
   // The flash lights the whole wall for a moment: a temporary third light source.
   return (
-    `<g class="mv" opacity="0">${glow}<circle cx="${gx}" cy="${gy}" r="${reach}" fill="url(#flashGlow)"/></g>` +
-    `<g class="mv" opacity="0">${flick}<path class="bolt0" d="${d}"/><path class="bolt1" d="${d}"/></g>`
+    `<!--E--><g class="mv" opacity="0">${glow}<circle cx="${gx}" cy="${gy}" r="${reach}" fill="url(#flashGlow)"/></g>` +
+    `<g class="mv" opacity="0">${flick}<path class="bolt0" d="${d}"/><path class="bolt1" d="${d}"/></g><!--/E-->`
   )
 }
 
@@ -255,16 +256,16 @@ ${gear(214, 838, 22, 9)}${gear(250, 810, 14, 5.7, true)}
 <path class="needle" d="M155 772V766"><animateTransform attributeName="transform" type="rotate" values="-50 155 772;20 155 772;-5 155 772;55 155 772;-50 155 772" dur="5.3s" repeatCount="indefinite"/></path>
 <g class="drift"><circle class="puff pf1" cx="90" cy="556" r="6"/><circle class="puff pf2" cx="90" cy="556" r="6"/><circle class="puff pf3" cx="90" cy="556" r="6"/></g>
 ${beam(330, 604, 294, 574, 4)}<rect class="b" x="304" y="582" width="5" height="12" transform="rotate(-40 306 588)"/><circle class="b" cx="290" cy="571" r="6"/>
-${lightning(win(17, 6, 0.25, 0), 'M118 690L132 684L118 676L131 668', 125, 680, 50)}
-${lightning(win(293, 200, 0.9, 0), 'M125 636L140 618L133 604L162 590L155 577L190 572L204 586L232 566L250 578L284 572M162 590L171 613L163 626M190 572L197 551L188 538M232 566L238 546M140 618L108 600L114 586', 200, 590)}
+${lightning(win(17 / L.boost, 6, 0.25, 0), 'M118 690L132 684L118 676L131 668', 125, 680, 50)}
+${lightning(win(293 / L.boost, 200, 0.9, 0), 'M125 636L140 618L133 604L162 590L155 577L190 572L204 586L232 566L250 578L284 572M162 590L171 613L163 626M190 572L197 551L188 538M232 566L238 546M140 618L108 600L114 586', 200, 590)}
 </g>
 ${rat('M330 414L-30 414', win(23, 6, 3.2, 0), true, { fade: 0.9 })}
 ${rat('M330 818L-30 818', win(41, 12, 3.6, 0), true, { fade: 0.9 })}
 ${rat('M330 818L-30 818', win(41, 12.5, 3.6, 0), true, { fade: 0.9 })}
 ${rat('M-30 244L118 244', win(53, 30, 2.2, 0), false, { fade: 0.9 })}
-${mouth(330, 420, 96, 122, 'fire', win(113, 40, 8))}
+${mouth(330, 420, 96, 122, 'fire')}
 ${mouth(120, 250, 70, 86)}
-${mouth(330, 822, 112, 142, 'fire', win(167, 100, 9))}
+${mouth(330, 822, 112, 142, 'fire')}
 ${mouth(418, 640, 40, 48)}
 ${hoist()}
 </svg>`
@@ -296,8 +297,8 @@ ${beam(420, 340, 420, 322, 3)}<circle class="b" cx="420" cy="317" r="6"/>
 <g><animateTransform attributeName="transform" type="translate" values="0 0;0 16;0 0" ${pump}/>
 <rect class="b" x="-36" y="-46" width="72" height="6"/>${beam(0, -46, 0, -104, 5)}</g>
 </g>
-${lightning(win(241, 120, 0.7, 0), 'M420 311L408 286L418 268L396 240L406 222L384 190L392 170L376 138L380 118L372 96M396 240L374 250M384 190L405 176M376 138L358 147', 398, 205)}
-${lightning(win(67, 30, 0.35, 0), 'M426 316L444 304L456 314L486 298', 456, 306, 140)}
+${lightning(win(241 / L.boost, 120, 0.7, 0), 'M420 311L408 286L418 268L396 240L406 222L384 190L392 170L376 138L380 118L372 96M396 240L374 250M384 190L405 176M376 138L358 147', 398, 205)}
+${lightning(win(67 / L.boost, 30, 0.35, 0), 'M426 316L444 304L456 314L486 298', 456, 306, 140)}
 </g>`
 }
 
@@ -328,9 +329,9 @@ ${torch(500, 476, 1)}${torch(372, 768, 3)}
 ${machine()}
 ${rat('M440 534L256 534', win(29, 3, 4.4, 0), true, { back: true, fade: 0.9 })}
 ${rat('M450 830L600 830', win(47, 25, 2.5, 0), false, { fade: 0.9 })}
-${mouth(300, 300, 110, 140, 'fire', win(79, 20, 7))}
-${mouth(440, 540, 80, 96, undefined, win(131, 70, 8))}
-${mouth(450, 834, 120, 150, undefined, win(149, 120, 9))}
+${mouth(300, 300, 110, 140, 'fire')}
+${mouth(440, 540, 80, 96)}
+${mouth(450, 834, 120, 150)}
 </svg>`
 }
 
@@ -346,28 +347,34 @@ const PALETTE = `.bg{fill:#0c100e}.bgc{stop-color:#0a0d0c}.r{fill:#151b18}.r2{fi
 // The whole scene is drawn at whisper level, so the transcript stays legible.
 const SCENE_OPACITY = 0.38
 
-const CSS = `<style>
+const css = () => {
+  const d = (n: number) => `${r3(n / L.speed)}s`
+  const anim = (name: string, n: number, rest: string) => (L.inert ? 'none' : `${name} ${d(n)} ${rest}`)
+  const g = r3(L.glow)
+  return `<style>
 svg{overflow:visible}
 .scene{opacity:${SCENE_OPACITY}}.deep{opacity:.9}
 path,rect,circle{stroke-linecap:round;stroke-linejoin:round}
 .edge,.strata,.beam,.tail,.rope,.pipe,.teeth,.spoke,.chain,.bars,.coil,.deck,.rim,.bolt0,.bolt1,.fold{fill:none}
 .tail{stroke-width:1.6}.rope{stroke-width:1.5}.chain{stroke-width:3;stroke-dasharray:5 3}.bars{stroke-width:1.5}.spoke{stroke-width:3}.pipe{stroke-width:9}.rim{stroke-width:9}
 .deck{stroke-width:5;stroke-dasharray:4 2}.bellows{stroke-width:1.5}.fold{stroke:#1a130c;stroke-width:1.2}
-.coil{stroke:#a07d3a;stroke-width:2}.orb{fill:#b6ff7a}.eye{fill:#ff5a3a}.halo{fill:#ff3b2a;opacity:.18}
+.coil{stroke:#a07d3a;stroke-width:2}.orb{fill:#b6ff7a;fill-opacity:${g}}.eye{fill:#ff5a3a}.halo{fill:#ff3b2a;opacity:.18}
 .bolt0{stroke:#6fd13a;stroke-width:9;opacity:.3}.bolt1{stroke:#e4ffb0;stroke-width:1.8}
 ${PALETTE}
-.fl{transform-box:fill-box;transform-origin:50% 100%;animation:fl 1.1s ease-in-out infinite alternate}
-.f2{animation-duration:1.37s}.f3{animation-duration:.83s;animation-delay:-.4s}
-.gl1,.gl2,.gl3,.gf{animation:gl 2.3s ease-in-out infinite alternate}.gl2{animation-duration:1.9s}.gl3{animation-duration:2.9s}
-.pu{animation:pu 4.3s ease-in-out infinite alternate}.pu2{animation:pu 6.1s ease-in-out infinite alternate}
+.key,.pu,.pu2{fill-opacity:${g}}
+.fl{transform-box:fill-box;transform-origin:50% 100%;animation:${anim('fl', 1.1, 'ease-in-out infinite alternate')}}
+.f2{animation-duration:${d(1.37)}}.f3{animation-duration:${d(0.83)};animation-delay:-.4s}
+.gl1,.gl2,.gl3,.gf{animation:${anim('gl', 2.3, 'ease-in-out infinite alternate')}}.gl2{animation-duration:${d(1.9)}}.gl3{animation-duration:${d(2.9)}}
+.pu{animation:${anim('pu', 4.3, 'ease-in-out infinite alternate')}}.pu2{animation:${anim('pu', 6.1, 'ease-in-out infinite alternate')}}
 @keyframes fl{0%{transform:scale(1,1)}30%{transform:scale(.94,1.07) skewX(4deg)}55%{transform:scale(1.03,.93) skewX(-2deg)}80%{transform:scale(.97,1.1) skewX(-5deg)}100%{transform:scale(1,.97)}}
 @keyframes gl{from{opacity:.7}to{opacity:1}}
 @keyframes pu{from{opacity:.55}to{opacity:1}}
 .needle{stroke:#c9b27a;stroke-width:1.5}
-.puff{fill:#6f8f6a;opacity:0;transform-box:fill-box;transform-origin:50% 50%;animation:puff 6.3s ease-out infinite}.pf2{animation-delay:-2.1s}.pf3{animation-delay:-4.2s}
+.puff{fill:#6f8f6a;opacity:0;transform-box:fill-box;transform-origin:50% 50%;animation:${anim('puff', 6.3, 'ease-out infinite')}}.pf2{animation-delay:-2.1s}.pf3{animation-delay:-4.2s}
 @keyframes puff{0%{opacity:0;transform:translate(0,0) scale(.6)}15%{opacity:.35}100%{opacity:0;transform:translate(-14px,-70px) scale(2.6)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}.mv,.drift{display:none}}
 </style>`
+}
 
 // Fog planes: one behind the walls (depth), two drifting bands in front.
 const FOG_BACK = `<rect class="fog fogback" width="100%" height="100%" fill="url(#fogBack)"/>`
@@ -387,7 +394,6 @@ function deepLeft(): string {
 <path class="r2" d="M150 0L170 70L184 0ZM210 0L222 44L236 0ZM262 0L270 30L282 0Z"/>
 <path class="k" d="M84 362L90 320L108 304L126 318L130 362Z"/><circle class="glow gl2" cx="108" cy="350" r="40" fill="url(#fireGlow)"/>
 <path class="k" d="M66 720L74 670L96 652L118 670L124 720Z"/>
-<g transform="translate(96 702) scale(.7) translate(-96 -702)">${eyes(96, 702, win(139, 60, 7))}</g>
 <path class="deck" opacity=".6" d="M146 470L250 476"/>
 ${beam(176, 474, 168, 580, 3)}${beam(226, 476, 236, 560, 3)}${beam(248, 477, 244, 500, 2)}
 <path class="rope" d="M250 476C254 514 246 548 252 590"/>
@@ -402,7 +408,6 @@ function deepRight(): string {
 <path class="r2" d="M300 0L314 52L326 0ZM350 0L360 80L374 0ZM408 0L416 36L428 0Z"/>
 <path class="k" d="M448 260L454 216L474 200L494 216L500 260Z"/><circle class="glow gl3" cx="474" cy="248" r="40" fill="url(#fireGlow)"/>
 <path class="k" d="M452 640L460 592L484 576L506 592L512 640Z"/>
-<g transform="translate(482 622) scale(.7) translate(-482 -622)">${eyes(482, 622, win(181, 150, 7))}</g>
 ${beam(372, 900, 380, 520, 4)}${beam(412, 900, 410, 520, 4)}${beam(380, 860, 410, 760, 2)}${beam(410, 760, 378, 660, 2)}${beam(378, 660, 410, 560, 2)}
 <path class="deck" opacity=".6" d="M352 520L432 516"/>
 <path class="pipe" opacity=".6" d="M436 380H520V300H700"/><circle class="glow pu2" cx="520" cy="380" r="26" fill="url(#warpGlow)"/>
@@ -413,15 +418,30 @@ ${beam(372, 900, 380, 520, 4)}${beam(412, 900, 410, 520, 4)}${beam(380, 860, 410
 // so it covers the transcript column at any width. The 2-unit viewBox makes the scale height/900.
 const FADE = `<svg width="100%" height="100%" viewBox="-1 0 2 900" preserveAspectRatio="xMidYMid meet" overflow="visible"><rect x="-6000" y="-2000" width="12000" height="5000" fill="url(#fade)"/></svg>`
 
+/** Inert: strip every SMIL animation. Running: scale every SMIL duration by the machinery speed. The eyes, wrapped
+ *  in markers, are left alone: they keep their own fades and blinks. */
+function pace(svg: string): string {
+  return svg
+    .split(/(<!--E-->[\s\S]*?<!--\/E-->)/)
+    .map((part, i) => {
+      if (i % 2) return part
+      if (L.inert) return part.replace(/<animate(?:Transform|Motion)?[^>]*\/>/g, '')
+      return part.replace(/dur="([\d.]+)s"/g, (_, n: string) => `dur="${r3(Number(n) / L.speed)}s"`)
+    })
+    .join('')
+}
+
 /** The whole warren as one SVG string. Pure: every call draws the same crooked shapes. */
-export function buildScene(): string {
+export function buildScene(state: WarrenState = { running: false, eyes: [] }): string {
   seed = 7
   holes.clear()
+  L = levelFor(state)
+  EYES = state.eyes
   // Near walls first: they draw from the seeded jitter, so their shapes stay as approved.
   const left = leftWall()
   const right = rightWall()
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" preserveAspectRatio="none">
-${CSS}${DEFS}
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" preserveAspectRatio="none">
+${css()}${DEFS}
 <!--layer:background-->
 <rect class="bg" width="100%" height="100%"/>
 <g class="scene">
@@ -441,4 +461,5 @@ ${FADE}
 <!--layer:vertical-fade-->
 <rect width="100%" height="100%" fill="url(#vfade)"/>
 </svg>`
+  return pace(svg)
 }
