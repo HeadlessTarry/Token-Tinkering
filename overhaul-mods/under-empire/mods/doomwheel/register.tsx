@@ -165,7 +165,7 @@ async function clearRetired($: Engine) {
 
 // ---------------------------------------------------------------- hooks
 
-// The engine takes one unmatched hook per event from a plugin, and Underlings holds those on the
+// The engine takes one unmatched hook per event from a plugin, and the warren's tracker holds those on the
 // events both mods watch. So each of Doomwheel's hooks there names what it watches in a matcher.
 
 /** Every session start, interactive or not. */
