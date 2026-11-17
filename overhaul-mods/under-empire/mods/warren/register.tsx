@@ -5,7 +5,7 @@ import { readWarren, registerTracker, startSession } from './tracker'
 
 const SCENE = 'warren'
 const GLASS = { blur: 24, opacity: 0.78, tint: '#0a0806' } as const
-/** Every session, interactive or not. Doomwheel hooks `session.start` too, so the warren names its sessions. */
+/** Every session, interactive or not. */
 const ANY_SESSION = { isInteractive: [true, false] }
 
 /**

@@ -28,15 +28,11 @@
         "rules": {
           "suspicious": {
             // The output parsers strip ANSI escapes and control characters on purpose.
-            "noControlCharactersInRegex": "off",
-            // The sprite bakers use forEach with expression-bodied arrows for their side effects.
-            "useIterableCallbackReturn": "off"
+            "noControlCharactersInRegex": "off"
           },
           "correctness": {
             // Engine hooks take ($, e, next) whether or not they read each one.
-            "noUnusedFunctionParameters": "off",
-            // Doomwheel's ticker is only ever written through ??=, which guards a single clock.every.
-            "noUnusedVariables": "off"
+            "noUnusedFunctionParameters": "off"
           },
           "complexity": {
             "useOptionalChain": "off"
