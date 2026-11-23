@@ -3,7 +3,7 @@
   "type": "module",
   "devDependencies": {
     "@anthropic-ai/claude-code": "2.1.326",
-    "@biomejs/biome": "2.6.6",
+    "@biomejs/biome": "2.6.8",
     "@j178/prek": "0.5.10"
   }
 }
